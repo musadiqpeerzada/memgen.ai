@@ -1,10 +1,12 @@
 from app.agents.business_analyzer import BusinessAnalyzer
+from app.agents.meme_generator import MemeImageGenerator
 from app.agents.meme_template_generator import MemeCampaignGenerator
 from app.config import Config
 
 from fastapi import FastAPI
 
 from app.models.business_profile import BusinessProfile
+from app.models.meme_content import MemeContent
 
 app = FastAPI()
 
@@ -29,3 +31,11 @@ def generate_memes(business_profile: dict, num_memes: int = 1):
     memes = generator.do(profile, num_memes)
     return memes
 
+@app.post("/generate_meme_image")
+def generate_meme_image(business_name: str, meme_content: dict):
+    """Generate a meme image based on the meme content"""
+    config = Config()
+    generator = MemeImageGenerator(config)
+    content = MemeContent(**meme_content)
+    image_path = generator.do(business_name, content)
+    return {"image_path": image_path}
