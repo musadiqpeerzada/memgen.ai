@@ -11,7 +11,7 @@ class Config:
 
         self.llm_provider = os.environ.get("LLM_PROVIDER", "ollama")
         self.ollama_base_url = os.environ.get("OLLAMA_HOST", "http://host.docker.internal:11434")
-        self.ollama_model = os.environ.get("OLLAMA_MODEL", "phi")
+        self.ollama_model = os.environ.get("OLLAMA_MODEL", "llama3.2")
         self.openai_api_key = os.environ.get("OPENAI_API_KEY", "")
         self.meme_generator = os.environ.get("MEME_GENERATOR", "memegen")
         self.minio_base_url = os.environ.get("MINIO_BASE_URL", "http://localhost:9000")
