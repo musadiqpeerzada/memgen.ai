@@ -1,4 +1,5 @@
 import datetime
+from io import BytesIO
 from pathlib import Path
 from typing import Optional
 import base64
@@ -8,6 +9,7 @@ import logging
 from app.config import Config
 from app.memegenrators.meme_generator_interface import MemeGeneratorInterface
 from app.models.meme_content import MemeContent
+from app.services.minio import MinioClient
 
 logger = logging.getLogger(__name__)
 
@@ -18,7 +20,8 @@ class OpenAIMemeGenerator(MemeGeneratorInterface):
         self.config = config
         self.save_dir = Path(getattr(config, "save_directory", "memes"))
         self.save_dir.mkdir(parents=True, exist_ok=True)
-        
+        self.minio_client = MinioClient(config)
+
     def generate(self, business_name: str, meme_content: MemeContent, filename:str) -> Optional[str]:
         try:
             prompt = f"""Create a high-quality, photorealistic marketing meme for {business_name}:
@@ -52,15 +55,13 @@ Text to include:
             
             image_data = image_response['data'][0]['b64_json']
             image_binary = base64.b64decode(image_data)
-            
-            timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-            safe_template_name = "".join(c if c.isalnum() else "_" for c in meme_content.template_name)
-            
-            with open(filename, 'wb') as file:
-                file.write(image_binary)
-                
-            return str(filename)
-            
+            image_stream = BytesIO(image_binary)
+            object_name = Path(filename).name
+            return self.minio_client.client.put_object(                
+                image_stream,
+                object_name,
+            )
+
         except Exception as e:
             logger.error(f"Error generating image: {str(e)}")
             return None

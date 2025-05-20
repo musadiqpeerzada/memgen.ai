@@ -25,8 +25,7 @@ class MemeImageGenerator(AgentInterface):
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         filename = self.save_dir/f"{business_name}_{meme_content.template_name}_{timestamp}.png"
         try:
-            self.generator.generate(business_name, meme_content, filename)
-            return str(filename)
+            return self.generator.generate(business_name, meme_content, filename)
         except Exception as e:
             print(f"Error generating image: {str(e)}")
             return None

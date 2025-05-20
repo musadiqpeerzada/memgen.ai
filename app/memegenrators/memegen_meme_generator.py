@@ -1,82 +1,93 @@
-import datetime
+import os
+from io import BytesIO
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Optional, Dict
 import requests
 import logging
 import numpy as np
 from sentence_transformers import SentenceTransformer
-
+from pinecone import Pinecone
 from app.config import Config
 from app.memegenrators.meme_generator_interface import MemeGeneratorInterface
 from app.models.meme_content import MemeContent
-from app.utils import fetch_meme_templates
+from app.services.minio import MinioClient
 
 logger = logging.getLogger(__name__)
 
 class MemeGenLinkMemeGenerator(MemeGeneratorInterface):
     """Generates images using the memegen.link API"""
-    
+
     def __init__(self, config: Config):
         self.config = config
         self.save_dir = Path(getattr(config, "save_directory", "memes"))
         self.save_dir.mkdir(parents=True, exist_ok=True)
         self.model = SentenceTransformer('all-MiniLM-L6-v2')
-    
+        self.minio_client = MinioClient(config)
     def generate(self, business_name: str, meme_content: MemeContent, filename: str) -> Optional[str]:
         try:
-            templates = fetch_meme_templates()
-            if not templates:
-                logger.warning("No meme templates found.")
-                return None
-            related_template = self.find_related_template(templates, meme_content)
+            related_template = self.find_related_template(meme_content)
             if not related_template:
                 logger.warning("No related template found.")
                 return None
             template_id = related_template.get("id", "")
-            
             top_text = meme_content.primary_text.strip()
             bottom_text = (meme_content.secondary_text or "").strip()
-            
             # Build the memegen URL
             url = f"https://api.memegen.link/images/{template_id}/{top_text}/{bottom_text}.png"
-            print(url)
-            
+            logger.info(f"Fetching meme URL: {url}")
             image_response = requests.get(url=url)
-            with open(filename, "wb") as f:
-                f.write(image_response.content)
-
-            
-            print(f"Meme saved to {filename}")
-            return str(filename)
+            image_bytes = image_response.content
+            image_stream = BytesIO(image_bytes)
+            object_name = Path(filename).name
+            presigned_url = self.minio_client.put_file(image_stream, object_name)
+            logger.info(f"Meme saved to {presigned_url}")
+            return presigned_url
         except Exception as e:
             logger.error(f"Error generating image with Memegen API: {str(e)}")
             return None
 
-    def find_related_template(self, templates: List[Dict], meme_content) -> Optional[Dict]:
+    def find_related_template(self, meme_content: MemeContent) -> Optional[Dict]:
         content_text = (
             f"{meme_content.template_name}. "
             f"{meme_content.primary_text} "
             f"{meme_content.secondary_text or ''} "
             f"{meme_content.visual_description}"
         )
+        if not content_text.strip():
+            logger.warning("Content text is empty.")
+            return None
 
-        content_embedding = self.get_embedding(content_text)
-        similarities = []
+        query_embedding = self.model.encode(content_text, convert_to_numpy=True).tolist()
+        if not query_embedding or not isinstance(query_embedding, list):
+            logger.error("Embedding generation failed.")
+            return None
 
-        for template in templates:
-            template_name = template.get("name", "")
-            template_embedding = self.get_embedding(template_name)
-            sim = cosine_similarity(content_embedding, template_embedding)
-            similarities.append((template, sim))
+        pinecone_api_key = os.environ.get("PINECONE_API_KEY", "")
+        if not pinecone_api_key:
+            logger.error("Missing PINECONE_API_KEY.")
+            return None
 
-        similarities.sort(key=lambda x: x[1], reverse=True)
-        return similarities[0][0] if similarities else None
+        pinecone_index_name = os.environ.get("PINECONE_INDEX", "meme-templates")
 
-    def get_embedding(self, text: str) -> np.ndarray:
-        return self.model.encode(text, convert_to_numpy=True)
+        try:
+            pc = Pinecone(api_key=pinecone_api_key)
+            index = pc.Index(name=pinecone_index_name)
 
-def cosine_similarity(vec1: np.ndarray, vec2: np.ndarray) -> float:
-    norm_product = np.linalg.norm(vec1) * np.linalg.norm(vec2)
-    if norm_product == 0:
-        return 0.0
-    return np.dot(vec1, vec2) / norm_product
+            query_response = index.query(
+                vector=query_embedding,
+                top_k=1,
+                include_metadata=True
+            )
+        except Exception as e:
+            logger.exception(f"Failed to query Pinecone: {e}")
+            return None
+
+        matches = query_response.get("matches", [])
+        if matches:
+            return {
+                "id": matches[0]["id"],
+                "name": matches[0]["metadata"].get("name", "")
+            }
+
+        logger.info("No match found.")
+        return None
