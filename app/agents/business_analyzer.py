@@ -14,7 +14,7 @@ class BusinessAnalyzer(AgentInterface):
     def __init__(self, config: Config):
         self.config = config
         self.llm = config.get_llm(temperature=0.2)  # Lower temperature for factual extraction
-        self.character_limit = 12000
+        self.character_limit = 6000
         self.retry_count = 3
 
         self.prompt = ChatPromptTemplate.from_template("""
