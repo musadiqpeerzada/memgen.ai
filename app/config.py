@@ -14,6 +14,11 @@ class Config:
         self.ollama_model = os.environ.get("OLLAMA_MODEL", "llama3.2")
         self.openai_api_key = os.environ.get("OPENAI_API_KEY", "")
         self.meme_generator = os.environ.get("MEME_GENERATOR", "memegen")
+        self.minio_base_url = os.environ.get("MINIO_BASE_URL", "http://localhost:9000")
+        self.minio_access_key = os.environ.get("MINIO_ACCESS_KEY", "minioadmin")
+        self.minio_secret_key = os.environ.get("MINIO_SECRET_KEY", "minioadmin")
+        self.minio_bucket = os.environ.get("MINIO_BUCKET", "memes")
+
 
     def get_llm(self, temperature=0.7):
         """Get language model based on configuration"""
