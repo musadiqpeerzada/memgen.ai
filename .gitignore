@@ -183,3 +183,4 @@ output/
 memes/
 scripts/
 templates.json
+.DS_Store
