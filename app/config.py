@@ -1,5 +1,4 @@
 import os
-from pathlib import Path
 from dotenv import load_dotenv
 from langchain_ollama import ChatOllama
 import logging
@@ -17,7 +16,7 @@ class Config:
         self.minio_base_url = os.environ.get("MINIO_BASE_URL", "http://localhost:9000")
         self.minio_access_key = os.environ.get("MINIO_ACCESS_KEY", "minioadmin")
         self.minio_secret_key = os.environ.get("MINIO_SECRET_KEY", "minioadmin")
-        self.minio_bucket = os.environ.get("MINIO_BUCKET", "memes")
+        self.minio_bucket = os.environ.get("MINIO_BUCKET", "memgen")
 
 
     def get_llm(self, temperature=0.7):

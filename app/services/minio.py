@@ -29,13 +29,13 @@ class MinioClient(metaclass=SingletonMeta):
 
     def put_file(self, file_stream, object_name: str, content_type="image/png"):
         self.client.put_object(
-            self.bucket,
-            object_name,
-            file_stream,
-            file_stream.getbuffer().nbytes,
+            bucket_name=self.bucket,
+            object_name=object_name,
+            data=file_stream,
+            length=file_stream.getbuffer().nbytes,
             content_type=content_type
         )
-        return self.client.get_presigned_url(self.bucket, object_name)
+        return self.client.get_presigned_url("GET",self.bucket, object_name)
     
     def get_file_url(self, object_name: str):
         return self.client.presigned_get_object(self.bucket, object_name)
