@@ -35,7 +35,7 @@ class MinioClient(metaclass=SingletonMeta):
             file_stream.getbuffer().nbytes,
             content_type=content_type
         )
-        return self.client.presigned_put_object(self.bucket, object_name)
+        return self.client.get_presigned_url(self.bucket, object_name)
     
     def get_file_url(self, object_name: str):
         return self.client.presigned_get_object(self.bucket, object_name)
