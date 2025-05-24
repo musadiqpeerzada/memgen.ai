@@ -13,7 +13,7 @@ class BusinessAnalyzer(AgentInterface):
     
     def __init__(self, config: Config):
         self.config = config
-        self.llm = config.get_llm(temperature=0.2)  # Lower temperature for factual extraction
+        self.llm = config.get_llm(temperature=0.2)
         self.character_limit = 6000
         self.retry_count = 3
 
@@ -50,8 +50,9 @@ class BusinessAnalyzer(AgentInterface):
         self.parser = PydanticOutputParser(pydantic_object=BusinessProfile)
         
     def do(self, url: str, retry_count: int = 0, content=None) -> BusinessProfile: 
+        provider_name = self.config.get_llm_provider().get_provider_name()
         if retry_count >= self.retry_count:
-            logger.error(f"Maximum retry attempts ({self.retry_count}) exceeded for URL: {url}")
+            logger.error(f"Maximum retry attempts ({self.retry_count}) exceeded for URL: {url} using {provider_name}")
             raise Exception(f"Failed to analyze website after {self.retry_count} attempts")
 
         try:
@@ -63,7 +64,7 @@ class BusinessAnalyzer(AgentInterface):
 
             chain = self.prompt | self.llm | self.parser
             result = chain.invoke({"content": content})
-            logger.info(f"Successfully extracted business profile for: {result.name}")
+            logger.info(f"Successfully extracted business profile for: {result.name} using {provider_name}")
             return result
 
         except Exception as e:
