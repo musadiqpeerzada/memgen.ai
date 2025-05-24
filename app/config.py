@@ -17,7 +17,8 @@ class Config:
         self.minio_access_key = os.environ.get("MINIO_ACCESS_KEY", "minioadmin")
         self.minio_secret_key = os.environ.get("MINIO_SECRET_KEY", "minioadmin")
         self.minio_bucket = os.environ.get("MINIO_BUCKET", "memgen")
-
+        self.pinecone_api_key = os.environ.get("PINECONE_API_KEY", "")
+        self.pinecone_index_name = os.environ.get("PINECONE_INDEX_NAME", "meme-templates")
 
     def get_llm(self, temperature=0.7):
         """Get language model based on configuration"""

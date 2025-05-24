@@ -6,11 +6,11 @@ import requests
 import logging
 import numpy as np
 from sentence_transformers import SentenceTransformer
-from pinecone import Pinecone
 from app.config import Config
 from app.memegenrators.meme_generator_interface import MemeGeneratorInterface
 from app.models.meme_content import MemeContent
 from app.services.minio import MinioClient
+from app.services.pinecone import PineconeClient
 
 logger = logging.getLogger(__name__)
 
@@ -23,6 +23,8 @@ class MemeGenLinkMemeGenerator(MemeGeneratorInterface):
         self.save_dir.mkdir(parents=True, exist_ok=True)
         self.model = SentenceTransformer('all-MiniLM-L6-v2')
         self.minio_client = MinioClient(config)
+        self.pinecone_client = PineconeClient(config)
+
     def generate(self, business_name: str, meme_content: MemeContent, filename: str) -> Optional[str]:
         try:
             related_template = self.find_related_template(meme_content)
@@ -62,21 +64,9 @@ class MemeGenLinkMemeGenerator(MemeGeneratorInterface):
             logger.error("Embedding generation failed.")
             return None
 
-        pinecone_api_key = os.environ.get("PINECONE_API_KEY", "")
-        if not pinecone_api_key:
-            logger.error("Missing PINECONE_API_KEY.")
-            return None
-
-        pinecone_index_name = os.environ.get("PINECONE_INDEX", "meme-templates")
-
         try:
-            pc = Pinecone(api_key=pinecone_api_key)
-            index = pc.Index(name=pinecone_index_name)
-
-            query_response = index.query(
-                vector=query_embedding,
-                top_k=1,
-                include_metadata=True
+            query_response = self.pinecone_client.query(
+                query_vector=query_embedding,
             )
         except Exception as e:
             logger.exception(f"Failed to query Pinecone: {e}")
