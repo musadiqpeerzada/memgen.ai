@@ -1,11 +1,12 @@
 # create an agent interface that all agents will implement
 from abc import ABC
-
+from app.config import Config
+from app.models.llm_model import LLModel
 
 class AgentInterface(ABC):
-    def __init__(self, config):
+    def __init__(self, config: Config):
         self.config = config
-        self.llm = config.get_llm()
+        self.llm = LLModel.get_instance(config).llm
     
     def do(self, *args, **kwargs):
         """Main method to be implemented by subclasses"""

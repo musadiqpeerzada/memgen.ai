@@ -14,9 +14,7 @@ class MemeCampaignGenerator(AgentInterface):
     """Generates creative meme marketing campaigns"""
     
     def __init__(self, config: Config):
-        self.config = config
-        # Higher temperature for creativity
-        self.llm = config.get_llm(temperature=0.8)
+        super().__init__(config)
         self.retry_count = 3  # Maximum number of retry attempts
         
         self.prompt = ChatPromptTemplate.from_template("""
