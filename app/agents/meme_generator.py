@@ -18,6 +18,7 @@ class MemeImageGenerator(AgentInterface):
         self.save_dir = Path('memes')
         self.save_dir.mkdir(parents=True, exist_ok=True)
         self.generator = get_meme_generator(self.config)
+        self.llm = LLModel.get_instance(config).llm
         
     def do(self, business_name: str, meme_content: MemeContent) -> Optional[str]:
         """Generate a meme image from the meme content using DALL·E 3 via the OpenAI image generation API"""

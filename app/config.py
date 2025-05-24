@@ -28,8 +28,36 @@ class Config:
                 base_url=self.ollama_base_url,
                 temperature=temperature
             )
+        elif self.llm_provider == "gemeni":
+            return ChatGemeni(
+                model=self.gemeni_model,
+                base_url=self.gemeni_base_url,
+                temperature=temperature
+            )
+        elif self.llm_provider == "openai":
+            return ChatOpenAI(
+                api_key=self.openai_api_key,
+                temperature=temperature
+            )
         else:
             raise ValueError(f"Unknown LLM provider: {self.llm_provider}")
+
+    def get_llm_model(self):
+        """Return the appropriate model based on the config"""
+        return LLModel.get_instance(self)
+
+class LLModel:
+    _instance = None
+
+    def __init__(self, config: Config):
+        self.config = config
+        self.llm = self.config.get_llm()
+
+    @classmethod
+    def get_instance(cls, config: Config):
+        if cls._instance is None:
+            cls._instance = cls(config)
+        return cls._instance
 
 # TODO: move this to a separate file
 def setup_logging():
