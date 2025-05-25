@@ -9,7 +9,6 @@ from langchain_core.output_parsers import PydanticOutputParser
 import logging
 
 from app.services.pinecone import PineconeClient
-from app.utils import create_embeddings
 
 logger = logging.getLogger(__name__)
 
@@ -18,12 +17,13 @@ class MemeCampaignGenerator(AgentInterface):
     
     def __init__(self, config: Config):
         self.config = config
-        self.llm = config.get_llm(temperature=1.0)
+        self.llm = config.get_llm(temperature=1.2)
         self.retry_count = 3
         self.llm_provider = config.get_llm_provider()
         self.pinecone_client = PineconeClient(config)
         self.prompt = ChatPromptTemplate.from_template("""
-            You are a creative marketing expert who specializes in viral meme campaigns for businesses.
+           You are a viral marketing expert who creates memes that actually get shared and saved. 
+            You understand internet culture, current trends, and what makes content relatable to real people.
             
             BUSINESS PROFILE:
             Name: {name}
@@ -41,14 +41,43 @@ class MemeCampaignGenerator(AgentInterface):
             Brand Tone: {brand_tone}
             
             TASK:
-            Create {num_memes} unique engaging marketing meme concept(s) for this business.
+            Create {num_memes} VIRAL-WORTHY meme concept(s) that people will actually want to share, save, and relate to.
             
-            REQUIREMENTS:
-            1. For each concept use a distinct, distinctive, creative and viral meme template.
-            2. Relate the content to the business core offerings and value propositions.
-            3. Match the brand tone and target the specified audience segments.
-            4. Provide a detailed visual description for image generation.
-            5. Focus on financial wellness, employee benefits, and modern workplace themes.
+            CREATIVITY REQUIREMENTS:
+            1. Research and use CURRENT viral meme templates that are trending and recognizable
+            2. Connect business value to GENUINE pain points people experience daily
+            3. Make it ACTUALLY funny or relatable, not corporate-cringe
+            4. Use language and references your target audience naturally uses
+            5. Address real problems with humor, not generic business speak
+            6. Tap into current cultural moments, trending topics, and internet culture
+            7. Make people think "this is so me" or "I need to send this to my friend"
+            8. Use authentic generational language (Gen Z slang, millennial references, etc.)
+            9. Reference current events, social trends, or shared cultural experiences
+            10. Think like someone who spends time on TikTok, Instagram, Twitter, and Reddit
+            
+            RELATABILITY CHECKLIST:
+            - Does this sound like something a real person would say?
+            - Would someone screenshot this and send it in a group chat?
+            - Does it acknowledge a real struggle or universal experience?
+            - Is the humor authentic to the demographic?
+            - Does it feel timely and current?
+            - Does it use meme formats people actually recognize and share?
+            - Would this get engagement (likes, shares, saves) on social media?
+            
+            RESEARCH APPROACH:
+            - Think about what's currently trending in meme culture
+            - Consider what pain points the target audience faces RIGHT NOW
+            - Use your knowledge of internet culture and social media trends
+            - Draw from current events, generational experiences, and shared struggles
+            - Consider platform-specific humor (TikTok vs Instagram vs Twitter style)
+            
+            FORMAT INSTRUCTIONS:
+            For each meme:
+            - Choose a viral, recognizable meme template that fits the message
+            - Create content that uses the template format correctly
+            - Connect naturally to business value without being obviously promotional
+            - Use authentic language that matches the target demographic
+            - Include current references or trending topics when relevant
             
             FORMAT:
             Return a JSON object with a single key "memes" that maps to a JSON array of meme concepts 
