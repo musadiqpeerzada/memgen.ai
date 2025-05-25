@@ -44,7 +44,7 @@ class MemeCampaignGenerator(AgentInterface):
             Create {num_memes} unique engaging marketing meme concept(s) for this business.
             
             REQUIREMENTS:
-            1. For each concept use a distinct, well-known meme template from {templates}
+            1. For each concept use a distinct, distinctive, creative and viral meme template.
             2. Relate the content to the business core offerings and value propositions.
             3. Match the brand tone and target the specified audience segments.
             4. Provide a detailed visual description for image generation.
@@ -84,7 +84,6 @@ class MemeCampaignGenerator(AgentInterface):
             value_propositions = "\n".join([f"• {prop}" for prop in business_profile.value_propositions])
             target_audience = "\n".join([f"• {audience}" for audience in business_profile.target_audience])
             brand_tone = business_profile.brand_tone
-            related_templates = self.find_related_template(business_profile)
             logger.info(f"Generating {num_memes} meme concept(s) for {name}"f" using {provider_name} provider")
             
             chain = self.prompt | self.llm | self.parser
@@ -96,7 +95,6 @@ class MemeCampaignGenerator(AgentInterface):
                 "target_audience": target_audience,
                 "brand_tone": brand_tone,
                 "num_memes": num_memes,
-                "templates": json.dumps(related_templates) 
             })
             
             logger.info(
@@ -109,30 +107,3 @@ class MemeCampaignGenerator(AgentInterface):
             logger.warning(f"Error generating meme campaign using {provider_name} "
             f"(attempt {retry_count + 1}/{self.retry_count}): {str(e)}")
             return self.do(business_profile, num_memes, retry_count + 1)
-
-# TODO: duplicate exists in memegen_meme_generator.py, refactor to have a single source of truth
-    def find_related_template(self, business_profile: BusinessProfile) -> List[str]:
-        logger.info(f"Finding related meme templates for {business_profile.name}")
-        logger.debug(f"Business profile data: {business_profile.model_dump()}")
-        vector_embedding = create_embeddings(content=business_profile.model_dump())
-        if not vector_embedding:
-            logger.warning("Vector embedding is empty.")
-            return None
-        try:
-            query_response = self.pinecone_client.query(
-                query_vector=vector_embedding,
-                top_k=50,
-            )
-        except Exception as e:
-            logger.exception(f"Failed to query Pinecone: {e}")
-            return None
-
-        matches = query_response.get("matches", [])
-        if matches:
-            return {
-                "id": matches[0]["id"],
-                "name": matches[0]["metadata"].get("name", "")
-            }
-
-        logger.info("No match found.")
-        return None
