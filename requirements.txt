@@ -16,3 +16,4 @@ langchain-anthropic==0.3.13
 langchain-google-genai==2.1.4
 langchain-openai==0.3.18
 slowapi==0.1.9
+starlette==0.46.2
