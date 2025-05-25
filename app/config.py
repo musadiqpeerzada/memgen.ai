@@ -26,6 +26,10 @@ class Config:
         self.pinecone_api_key = os.environ.get("PINECONE_API_KEY", "")
         self.pinecone_index_name = os.environ.get("PINECONE_INDEX_NAME", "meme-templates")
 
+        self.rate_limit_max_requests = int(os.environ.get("RATE_LIMIT", 2))
+        self.rate_window = int(os.environ.get("RATE_WINDOW", 'hour')) # day, hour, minute, second
+    
+
     def _build_llm_config(self) -> dict:
         return {
             # Ollama config
