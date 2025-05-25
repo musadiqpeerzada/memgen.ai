@@ -42,7 +42,7 @@ class MemeCampaignGenerator(AgentInterface):
             
             TASK:
             Create {num_memes} VIRAL-WORTHY meme concept(s) that people will actually want to share, save, and relate to.
-            
+            Make sure to only create {num_memes} concepts, no more, no less.
             CREATIVITY REQUIREMENTS:
             1. Research and use CURRENT viral meme templates that are trending and recognizable
             2. Connect business value to GENUINE pain points people experience daily
