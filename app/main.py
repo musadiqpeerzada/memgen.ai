@@ -9,9 +9,12 @@ from app.config import Config
 from app.agents.business_analyzer import BusinessAnalyzer
 from app.agents.meme_generator import MemeImageGenerator
 from app.agents.meme_template_generator import MemeCampaignGenerator
+from app.middlewares.timeout import TimeoutMiddleware
 
 app = FastAPI()
 config = Config()
+
+app.add_middleware(TimeoutMiddleware, timeout=60)
 
 limiter = Limiter(key_func=get_remote_address)
 app.state.limiter = limiter
