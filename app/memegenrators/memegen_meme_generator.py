@@ -4,13 +4,14 @@ from pathlib import Path
 from typing import Optional, Dict
 import requests
 import logging
-import numpy as np
-from sentence_transformers import SentenceTransformer
+
+import urllib
 from app.config import Config
 from app.memegenrators.meme_generator_interface import MemeGeneratorInterface
 from app.models.meme_content import MemeContent
 from app.services.minio import MinioClient
 from app.services.pinecone import PineconeClient
+from app.utils import create_embeddings
 
 logger = logging.getLogger(__name__)
 
@@ -21,7 +22,6 @@ class MemeGenLinkMemeGenerator(MemeGeneratorInterface):
         self.config = config
         self.save_dir = Path(getattr(config, "save_directory", "memes"))
         self.save_dir.mkdir(parents=True, exist_ok=True)
-        self.model = SentenceTransformer('all-MiniLM-L6-v2')
         self.minio_client = MinioClient(config)
         self.pinecone_client = PineconeClient(config)
 
@@ -32,10 +32,12 @@ class MemeGenLinkMemeGenerator(MemeGeneratorInterface):
                 logger.warning("No related template found.")
                 return None
             template_id = related_template.get("id", "")
-            top_text = meme_content.primary_text.strip()
-            bottom_text = (meme_content.secondary_text or "").strip()
-            # Build the memegen URL
-            url = f"https://api.memegen.link/images/{template_id}/{top_text}/{bottom_text}.png"
+            formatted_texts = [
+                urllib.parse.quote(text.strip().replace("-", "--").replace("_", "__").replace("/", "~s"))
+                for text in meme_content.texts
+            ]
+            text_path = "/".join(formatted_texts) if formatted_texts else "_"
+            url = f"https://api.memegen.link/images/{template_id}/{text_path}.png"
             logger.info(f"Fetching meme URL: {url}")
             image_response = requests.get(url=url)
             image_bytes = image_response.content
@@ -49,24 +51,13 @@ class MemeGenLinkMemeGenerator(MemeGeneratorInterface):
             return None
 
     def find_related_template(self, meme_content: MemeContent) -> Optional[Dict]:
-        content_text = (
-            f"{meme_content.template_name}. "
-            f"{meme_content.primary_text} "
-            f"{meme_content.secondary_text or ''} "
-            f"{meme_content.visual_description}"
-        )
-        if not content_text.strip():
-            logger.warning("Content text is empty.")
+        vector_embedding = create_embeddings(content=meme_content.model_dump())
+        if not vector_embedding:
+            logger.warning("Vector embedding is empty.")
             return None
-
-        query_embedding = self.model.encode(content_text, convert_to_numpy=True).tolist()
-        if not query_embedding or not isinstance(query_embedding, list):
-            logger.error("Embedding generation failed.")
-            return None
-
         try:
             query_response = self.pinecone_client.query(
-                query_vector=query_embedding,
+                query_vector=vector_embedding,
             )
         except Exception as e:
             logger.exception(f"Failed to query Pinecone: {e}")

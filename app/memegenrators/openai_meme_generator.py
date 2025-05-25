@@ -1,4 +1,3 @@
-import datetime
 from io import BytesIO
 from pathlib import Path
 from typing import Optional
@@ -22,19 +21,19 @@ class OpenAIMemeGenerator(MemeGeneratorInterface):
         self.save_dir.mkdir(parents=True, exist_ok=True)
         self.minio_client = MinioClient(config)
 
-    def generate(self, business_name: str, meme_content: MemeContent, filename:str) -> Optional[str]:
+    def generate(self, business_name: str, meme_content: MemeContent, filename: str) -> Optional[str]:
         try:
+            texts_prompt = "\n".join([f"- Text {i+1}: {text}" for i, text in enumerate(meme_content.texts)])
+
             prompt = f"""Create a high-quality, photorealistic marketing meme for {business_name}:
 
-Meme template to use: {meme_content.template_name}
-Visual Description: {meme_content.visual_description}
+            Meme template to use: {meme_content.template_name}
+            Visual Description: {meme_content.visual_description}
 
-Text to include:
-- Main text: {meme_content.primary_text}
-- Secondary text: {meme_content.secondary_text or ''}
+            Text to include: {texts_prompt}
 
-{"- Hashtags: " + " ".join(meme_content.hashtags) if hasattr(meme_content, "hashtags") and meme_content.hashtags else ""}
-"""
+            {"- Hashtags: " + " ".join(meme_content.hashtags) if hasattr(meme_content, "hashtags") and meme_content.hashtags else ""}
+            """
             logger.info(f"Generating prompt for DALL·E 3: {prompt}")
             
             headers = {
@@ -57,7 +56,7 @@ Text to include:
             image_binary = base64.b64decode(image_data)
             image_stream = BytesIO(image_binary)
             object_name = Path(filename).name
-            return self.minio_client.client.put_object(                
+            return self.minio_client.client.put_object(
                 image_stream,
                 object_name,
             )
