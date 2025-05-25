@@ -1,4 +1,5 @@
 from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from slowapi.util import get_remote_address
@@ -21,6 +22,20 @@ app.state.limiter = limiter
 app.add_middleware(SlowAPIMiddleware)
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 rate_limit_key = f"{config.rate_limit_max_requests}/{config.rate_window}"
+
+origins = [
+    "http://localhost",
+    "http://localhost:3000",
+    "https://memgen.musadiqpeerzada.com"
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 business_analyzer = BusinessAnalyzer(config)
 meme_campaign_generator = MemeCampaignGenerator(config)
