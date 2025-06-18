@@ -6,7 +6,7 @@ from typing import Dict, Optional
 from sentence_transformers import SentenceTransformer
 
 logger = logging.getLogger(__name__)
-encoding_model = SentenceTransformer('all-MiniLM-L6-v2')
+encoding_model = SentenceTransformer('models/all-MiniLM-L6-v2')
 
 def fetch_meme_templates():
     try:
