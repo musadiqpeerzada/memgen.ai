@@ -1,5 +1,11 @@
 FROM python:3.11-slim
 
+# limit BLAS/OMP/MKL to 1 thread and identify your client
+ENV OPENBLAS_NUM_THREADS=1 \
+    OMP_NUM_THREADS=1 \
+    MKL_NUM_THREADS=1 \
+    USER_AGENT=memgen/1.0
+
 # Set working directory
 WORKDIR /code
 
