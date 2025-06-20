@@ -43,12 +43,12 @@ meme_generator = MemeImageGenerator(config)
 logger = logging.getLogger(__name__)
 
 @app.get("/health")
-def read_root():
+async def read_root():
     return {"message": "Sab Changa si!"}
 
 @app.post("/meme_campaign")
 # @limiter.limit(rate_limit_key)
-def meme_campaign(request: Request, url: str, num_memes: int = 1):
+async def meme_campaign(request: Request, url: str, num_memes: int = 1):
     """Generate a meme campaign based on a website"""
     business_profile = business_analyzer.do(url)
     logger.info(f"Business profile: {business_profile}")   
