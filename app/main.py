@@ -17,7 +17,13 @@ config = Config()
 
 app.add_middleware(TimeoutMiddleware, timeout=60)
 
-limiter = Limiter(key_func=get_remote_address)
+def real_ip(request: Request):
+    xff = request.headers.get("X-Forwarded-For")
+    if xff:
+        return xff.split(",")[0].strip()
+    return request.client.host
+
+limiter = Limiter(key_func=real_ip)
 app.state.limiter = limiter
 app.add_middleware(SlowAPIMiddleware)
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
