@@ -21,7 +21,7 @@ class MemeImageGenerator(AgentInterface):
         """Generate a meme image from the meme content using DALL·E 3 via the OpenAI image generation API"""
         # add a timestamp to the filename
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        filename = self.save_dir/f"{business_name}_{meme_content.template_name}_{timestamp}.png"
+        filename = f"{business_name}/{meme_content.template_name}_{timestamp}.png"
         try:
             return self.generator.generate(business_name, meme_content, filename)
         except Exception as e:
