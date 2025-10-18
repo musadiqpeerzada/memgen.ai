@@ -11,7 +11,7 @@ from app.memegenrators.meme_generator_interface import MemeGeneratorInterface
 from app.models.meme_content import MemeContent
 from app.services.minio import MinioClient
 from app.services.pinecone import PineconeClient
-from app.utils import create_embeddings
+from app.services.embeddings import generate_embeddings
 
 logger = logging.getLogger(__name__)
 
@@ -51,7 +51,7 @@ class MemeGenLinkMemeGenerator(MemeGeneratorInterface):
             return None
 
     def find_related_template(self, meme_content: MemeContent) -> Optional[Dict]:
-        vector_embedding = create_embeddings(content=meme_content.model_dump())
+        vector_embedding = generate_embeddings(content=meme_content.model_dump())
         if not vector_embedding:
             logger.warning("Vector embedding is empty.")
             return None
