@@ -15,8 +15,6 @@ class MemeImageGenerator(AgentInterface):
     
     def __init__(self, config: Config):
         self.config = config
-        self.save_dir = Path('memes')
-        self.save_dir.mkdir(parents=True, exist_ok=True)
         self.generator = get_meme_generator(self.config)
         
     def do(self, business_name: str, meme_content: MemeContent) -> Optional[str]:

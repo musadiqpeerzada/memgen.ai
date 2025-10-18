@@ -17,8 +17,6 @@ class OpenAIMemeGenerator(MemeGeneratorInterface):
     
     def __init__(self, config: Config):
         self.config = config
-        self.save_dir = Path(getattr(config, "save_directory", "memes"))
-        self.save_dir.mkdir(parents=True, exist_ok=True)
         self.minio_client = MinioClient(config)
 
     def generate(self, business_name: str, meme_content: MemeContent, filename: str) -> Optional[str]:
