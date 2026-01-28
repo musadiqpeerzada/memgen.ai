@@ -46,7 +46,7 @@ class Config:
             
             # Google Gemini config
             "google_api_key": os.environ.get("GOOGLE_API_KEY", ""),
-            "gemini_model": os.environ.get("GEMINI_MODEL", "gemini-2.0-flash"),
+            "gemini_model": os.environ.get("GEMINI_MODEL", "gemini-2.5-flash-lite"),
         }
 
     def get_llm(self, temperature: float = 0.7, **kwargs):

@@ -7,7 +7,7 @@ class GeminiProvider(BaseLLMProvider):
     def __init__(self, config: Dict[str, Any]):
         super().__init__(config)
         self.api_key = config.get("google_api_key", "")
-        self.model = config.get("gemini_model", "gemini-1.5-pro")
+        self.model = config.get("gemini_model", "gemini-2.5-flash-lite")
     
     def get_client(self, temperature: float = 0.7, **kwargs) -> ChatGoogleGenerativeAI:
         """Return Gemini client"""
